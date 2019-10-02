@@ -1,0 +1,91 @@
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.util.*;
+
+public class ProTax 
+{
+	//Finds the bracket the inputted income is in
+	static int findBracket(double inc,double incBracket[], double taxBracket[])
+	{
+		if(inc<=incBracket[0])
+			return 0;
+		for(int i = 0; i<incBracket.length; i++)
+		{
+			if(inc<=incBracket[i])
+				return i;
+		}
+		return incBracket.length-1;
+	}
+	
+	//Calculates the payment of the tax dependent on the income inputted
+	static double tax(double inc, double[] taxRate, int bracket, double[] incBracket)
+	{
+		double p=0;
+		while(0<bracket)
+		{
+			double incOverBracket = 0;
+			if(inc>incBracket[bracket-1])
+			{
+				incOverBracket = inc - incBracket[bracket-1];
+				inc -= incOverBracket;
+			}
+			p += (incOverBracket * taxRate[bracket]);
+			bracket--;
+		}
+		return p;
+	}
+
+	public static void main(String[]args) throws IOException
+	{
+		double pay = 0;
+		FileReader fr = new FileReader("brackets.txt");
+		BufferedReader br = new BufferedReader(fr);
+		
+		//Reads the text file "brackets.txt", retrieves the values in the file and adds them to the intialized array lists
+		String reader;
+		List<Double> bracketInc = new ArrayList<>(Arrays.asList());
+		List<Double> bracketTax = new ArrayList<>(Arrays.asList());
+		while((reader=br.readLine()) != null)
+		{
+			String[] temp = reader.split(",");
+			bracketInc.add(Double.parseDouble(temp[0]));
+			bracketTax.add(Double.parseDouble(temp[1]));
+		}
+		br.close();
+		
+		//Moves the values in the ArrayList into an array, making the values easier to work with
+		double[] bracketFinalInc = new double[bracketInc.size()];
+		double[] bracketFinalTax = new double[bracketTax.size()];
+		for(int i = 0; i<bracketInc.size(); i++)
+		{
+			double incTemp = bracketInc.get(i);
+			double taxTemp = bracketTax.get(i);
+			bracketFinalInc[i] = incTemp;
+			bracketFinalTax[i] = taxTemp;
+		}
+		
+		//Allows the user to input their income
+		Scanner s = new Scanner(System.in);
+		System.out.println("Welcome to the Progressive task simulator!");
+		System.out.println("Please enter your annual income: ");
+		double income = s.nextDouble();
+		s.close();
+		
+		//Finds the inputted income's tax bracket
+		int bracket = findBracket(income,bracketFinalInc,bracketFinalTax);
+		
+		//If the income is in the last tax bracket, no income tax is charged
+		if (bracket == 0 )
+		{
+			System.out.println("No income tax is paid");
+			return;
+		}
+		
+		//Calls the tax method using the given information
+		pay = tax(income, bracketFinalTax, bracket, bracketFinalInc);
+		System.out.println("The paid income tax for the given salary is: " + pay);
+
+	}
+}
